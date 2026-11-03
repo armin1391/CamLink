@@ -238,33 +238,38 @@ header h2 {
     margin: 15px 0;
 }
 
-.waiting {
-    background: #39d69a12;
-    border: 1px solid #39d69a35;
-
-    border-radius: 12px;
-    padding: 18px;
-
-    text-align: center;
-    color: var(--green);
-
+.muted {
+    color: var(--muted);
     font-size: 13px;
     line-height: 2;
-    margin: 20px 0;
+}
+
+.input {
+    width: 100%;
+    padding: 14px;
+
+    border-radius: 12px;
+    border: 1px solid var(--border);
+
+    background: #07111f;
+    color: white;
+
+    margin: 15px 0;
+    outline: none;
+}
+
+.input:focus {
+    border-color: var(--green);
 }
 
 .request {
     background: #14263a;
     border: 1px solid var(--border);
 
-    padding: 18px;
+    padding: 17px;
     border-radius: 14px;
 
-    margin-top: 20px;
-}
-
-.request h3 {
-    color: var(--green);
+    margin: 15px 0;
 }
 
 .request p {
