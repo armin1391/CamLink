@@ -8,7 +8,7 @@
 
 // این شناسه باید در تمام دستگاه‌ها یکسان باشد.
 // بهتر است آن را با یک شناسه تصادفی و غیرقابل حدس عوض کنی.
-const OWNER_PEER_ID = "camlink-owner-armin-2026-private-01";
+const OWNER_PEER_ID = "armin-camlink-owner-739182-2026";
 
 
 /*
