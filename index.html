@@ -8,7 +8,6 @@
     <title>CamLink | اتصال دوربین</title>
 
     <link rel="stylesheet" href="style.css">
-    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 
 <body>
@@ -22,6 +21,7 @@
     </header>
 
     <section class="hero">
+
         <span class="tag">LIVE CAMERA CONNECTION</span>
 
         <h1>
@@ -29,24 +29,36 @@
             <span>با اجازه شما</span>
         </h1>
 
-        <p>اتصال مستقیم و مشاهده تصویر زنده دوربین</p>
+        <p>ارتباط امن برای اشتراک‌گذاری تصویر دوربین</p>
+
     </section>
+
+    <!-- صفحه اصلی -->
 
     <section id="home" class="grid">
 
         <button class="card" id="showSender">
+
             <div class="icon">📷</div>
+
             <h3>ارسال تصویر</h3>
+
             <p>اشتراک‌گذاری دوربین این دستگاه</p>
+
         </button>
 
         <button class="card" id="showViewer">
+
             <div class="icon">📱</div>
+
             <h3>مشاهده تصویر</h3>
-            <p>پنل مدیریت درخواست‌ها و مشاهده تصویر</p>
+
+            <p>ورود به پنل مدیریت درخواست‌ها</p>
+
         </button>
 
     </section>
+
 
     <!-- پنل فرستنده -->
 
@@ -57,97 +69,147 @@
         <h2>ارسال تصویر دوربین</h2>
 
         <div class="notice">
+
             با شروع ارسال، دوربین دستگاه شما روشن می‌شود.
-            درخواست مشاهده تصویر برای بیننده ارسال خواهد شد.
-            بیننده باید درخواست را تأیید کند.
+
+            درخواست مشاهده برای مدیر پنل ارسال خواهد شد.
+
+            فقط پس از تأیید مدیر، تصویر منتقل می‌شود.
+
             هر زمان بخواهید می‌توانید ارسال را متوقف کنید.
+
         </div>
 
         <label class="consent">
+
             <input type="checkbox" id="consent">
-            با ارسال زنده تصویر دوربین موافقم.
+
+            با ارسال تصویر زنده دوربین موافقم.
+
         </label>
 
         <button id="startCamera" class="primary" disabled>
+
             تأیید و روشن‌کردن دوربین
+
         </button>
 
         <div id="senderActive" class="hidden">
 
-            <div class="status" id="senderStatus">
-                در انتظار اتصال به بیننده...
-            </div>
-
-            <div class="waiting">
-                دوربین شما فعال است.
-                درخواست مشاهده در حال ارسال است.
+            <div id="senderStatus" class="status">
+                در انتظار اتصال...
             </div>
 
             <button id="stopCamera" class="danger">
+
                 توقف ارسال و خاموش‌کردن دوربین
+
             </button>
 
         </div>
 
     </section>
+
+
+    <!-- ورود مدیر -->
+
+    <section id="loginPanel" class="panel hidden">
+
+        <button class="back" data-back>← بازگشت</button>
+
+        <h2>ورود مدیر CamLink</h2>
+
+        <p class="muted">
+
+            برای مشاهده درخواست‌ها، رمز اختصاصی خودت را وارد کن.
+
+        </p>
+
+        <input
+            type="password"
+            id="ownerPassword"
+            class="input"
+            placeholder="رمز ورود مدیر"
+            autocomplete="current-password"
+        >
+
+        <button id="loginButton" class="primary">
+
+            ورود به پنل
+
+        </button>
+
+    </section>
+
 
     <!-- پنل بیننده -->
 
     <section id="viewerPanel" class="panel hidden">
 
-        <button class="back" data-back>← بازگشت</button>
+        <button class="back" id="logoutButton">
 
-        <h2>پنل مشاهده تصویر</h2>
+            خروج از پنل
+
+        </button>
+
+        <h2>پنل مدیریت دوربین</h2>
 
         <div id="viewerConnection" class="status">
-            در حال اتصال به پنل...
+
+            در حال اتصال...
+
         </div>
 
-        <div id="pendingBox" class="request hidden">
+        <h3>درخواست‌های دریافتی</h3>
 
-            <h3>📷 درخواست جدید</h3>
+        <div id="requestsList">
 
-            <p>
-                یک دستگاه درخواست ارسال تصویر دوربین دارد.
+            <p class="muted">
+
+                هنوز درخواستی دریافت نشده است.
+
             </p>
-
-            <button id="approveRequest" class="primary">
-                تأیید و مشاهده تصویر
-            </button>
-
-            <button id="rejectRequest" class="danger">
-                رد درخواست
-            </button>
 
         </div>
 
         <div id="viewerActive" class="hidden">
 
-            <div class="status" id="viewerStatus">
-                تصویر زنده
-            </div>
+            <h3>تصویر زنده</h3>
 
             <video
                 id="remoteVideo"
                 autoplay
                 playsinline
-                controls>
-            </video>
+            ></video>
+
+            <div id="viewerStatus" class="status">
+
+                در حال دریافت تصویر...
+
+            </div>
 
             <button id="disconnectViewer" class="danger">
+
                 قطع اتصال
+
             </button>
 
         </div>
 
     </section>
 
+
     <div id="globalStatus" class="global-status">
+
         آماده اتصال
+
     </div>
 
+
     <footer>
+
         CamLink · ارتباط با رضایت کاربر
+
     </footer>
 
 </main>
