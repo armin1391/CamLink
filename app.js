@@ -1,5 +1,22 @@
 "use strict";
 
+/*
+========================================
+تنظیمات اصلی
+========================================
+*/
+
+// این شناسه باید در تمام دستگاه‌ها یکسان باشد.
+// بهتر است آن را با یک شناسه تصادفی و غیرقابل حدس عوض کنی.
+const OWNER_PEER_ID = "camlink-owner-armin-2026-private-01";
+
+
+/*
+========================================
+متغیرها
+========================================
+*/
+
 const $ = id => document.getElementById(id);
 
 let peer = null;
@@ -7,20 +24,25 @@ let localStream = null;
 let activeCall = null;
 
 let role = null;
+let incomingCall = null;
 
 
-// ======================================
-// وضعیت سایت
-// ======================================
+/*
+========================================
+وضعیت سایت
+========================================
+*/
 
 function status(message) {
     $("globalStatus").textContent = message;
 }
 
 
-// ======================================
-// نمایش پنل‌ها
-// ======================================
+/*
+========================================
+نمایش پنل‌ها
+========================================
+*/
 
 function show(panel) {
 
@@ -29,13 +51,14 @@ function show(panel) {
     $("viewerPanel").classList.add("hidden");
 
     panel.classList.remove("hidden");
-
 }
 
 
-// ======================================
-// قطع ارتباط
-// ======================================
+/*
+========================================
+قطع ارتباط
+========================================
+*/
 
 function resetPeer() {
 
@@ -44,17 +67,23 @@ function resetPeer() {
         activeCall = null;
     }
 
+    if (incomingCall) {
+        incomingCall.close();
+        incomingCall = null;
+    }
+
     if (peer) {
         peer.destroy();
         peer = null;
     }
-
 }
 
 
-// ======================================
-// خاموش کردن دوربین
-// ======================================
+/*
+========================================
+خاموش کردن دوربین
+========================================
+*/
 
 function stopLocalMedia() {
 
@@ -66,15 +95,14 @@ function stopLocalMedia() {
 
         localStream = null;
     }
-
-    $("localVideo").srcObject = null;
-
 }
 
 
-// ======================================
-// انتخاب حالت
-// ======================================
+/*
+========================================
+انتخاب حالت
+========================================
+*/
 
 $("showSender").onclick = () => {
 
@@ -83,7 +111,6 @@ $("showSender").onclick = () => {
     show($("senderPanel"));
 
     status("رضایت خود را تأیید کنید.");
-
 };
 
 
@@ -93,50 +120,53 @@ $("showViewer").onclick = () => {
 
     show($("viewerPanel"));
 
-    status("کد اتصال را وارد کنید.");
-
+    startViewer();
 };
 
 
-// ======================================
-// بازگشت
-// ======================================
+/*
+========================================
+بازگشت
+========================================
+*/
 
 document.querySelectorAll("[data-back]").forEach(button => {
 
     button.onclick = () => {
 
-        if (role === "sender" && localStream) {
+        if (role === "sender") {
             stopSender();
         }
 
-        if (role === "viewer" && peer) {
+        if (role === "viewer") {
             stopViewer();
         }
 
         role = null;
 
         show($("home"));
-
     };
 
 });
 
 
-// ======================================
-// تأیید رضایت
-// ======================================
+/*
+========================================
+تأیید رضایت
+========================================
+*/
 
 $("consent").onchange = event => {
 
     $("startCamera").disabled = !event.target.checked;
-
 };
 
 
-// ======================================
-// شروع ارسال تصویر
-// ======================================
+/*
+========================================
+شروع ارسال تصویر
+========================================
+*/
 
 $("startCamera").onclick = async () => {
 
@@ -148,166 +178,95 @@ $("startCamera").onclick = async () => {
 
     try {
 
-        if (
-            !navigator.mediaDevices ||
-            !navigator.mediaDevices.getUserMedia
-        ) {
-
-            throw new Error(
-                "مرورگر از دسترسی دوربین پشتیبانی نمی‌کند."
-            );
-
+        if (!navigator.mediaDevices?.getUserMedia) {
+            throw new Error("مرورگر از دوربین پشتیبانی نمی‌کند.");
         }
-
 
         // فقط دوربین؛ بدون میکروفون
 
-        localStream =
-            await navigator.mediaDevices.getUserMedia({
+        localStream = await navigator.mediaDevices.getUserMedia({
 
-                audio: false,
+            audio: false,
 
-                video: {
+            video: {
+                facingMode: "environment",
+                width: { ideal: 1280 },
+                height: { ideal: 720 }
+            }
 
-                    facingMode: "environment",
-
-                    width: {
-                        ideal: 1280
-                    },
-
-                    height: {
-                        ideal: 720
-                    }
-
-                }
-
-            });
-
-
-        $("localVideo").srcObject = localStream;
+        });
 
         $("senderActive").classList.remove("hidden");
-
         $("startCamera").classList.add("hidden");
 
-
         $("senderStatus").textContent =
-            "دوربین روشن است؛ منتظر بیننده...";
-
+            "در حال اتصال به بیننده...";
 
         peer = new Peer();
 
+        peer.on("open", () => {
 
-        // دریافت شناسه اتصال
+            status("در حال ارسال درخواست مشاهده...");
 
-        peer.on("open", id => {
+            // درخواست اتصال به شناسه ثابت بیننده
 
-            $("myCode").textContent = id;
-
-            status("کد اتصال آماده است.");
-
-        });
-
-
-        // درخواست مشاهده تصویر
-
-        peer.on("call", call => {
-
-            const approved = confirm(
-                "یک دستگاه درخواست مشاهده تصویر زنده دوربین شما را دارد. اجازه می‌دهید؟"
+            activeCall = peer.call(
+                OWNER_PEER_ID,
+                localStream
             );
 
-            if (!approved) {
-
-                call.close();
-
-                $("senderStatus").textContent =
-                    "درخواست رد شد.";
-
-                return;
-
+            if (!activeCall) {
+                throw new Error("ارسال درخواست ناموفق بود.");
             }
-
-
-            if (activeCall) {
-                activeCall.close();
-            }
-
-            activeCall = call;
-
-            call.answer(localStream);
-
 
             $("senderStatus").textContent =
-                "تصویر برای بیننده تأییدشده ارسال می‌شود.";
+                "در انتظار تأیید بیننده...";
 
-
-            call.on("close", () => {
-
-                if (activeCall === call) {
-                    activeCall = null;
-                }
+            activeCall.on("close", () => {
 
                 $("senderStatus").textContent =
-                    "بیننده قطع شد.";
+                    "اتصال پایان یافت.";
 
+                stopSender();
+            });
+
+            activeCall.on("error", () => {
+
+                status("خطا در ارتباط با بیننده.");
+
+                stopSender();
             });
 
         });
-
 
         peer.on("error", error => {
 
             status("خطای اتصال: " + error.type);
 
+            stopSender();
         });
-
 
     } catch (error) {
 
         stopLocalMedia();
 
+        $("senderActive").classList.add("hidden");
+
         $("startCamera").classList.remove("hidden");
 
         $("startCamera").disabled = false;
 
-        $("senderActive").classList.add("hidden");
-
-        status(error.message);
-
+        status(error.message || "خطا در روشن‌کردن دوربین.");
     }
 
 };
 
 
-// ======================================
-// کپی کد اتصال
-// ======================================
-
-$("copyCode").onclick = async () => {
-
-    const code = $("myCode").textContent;
-
-    if (!code || code === "---") return;
-
-    try {
-
-        await navigator.clipboard.writeText(code);
-
-        status("کد کپی شد.");
-
-    } catch {
-
-        status("کد را دستی کپی کنید.");
-
-    }
-
-};
-
-
-// ======================================
-// توقف ارسال
-// ======================================
+/*
+========================================
+توقف ارسال
+========================================
+*/
 
 function stopSender() {
 
@@ -319,131 +278,170 @@ function stopSender() {
 
     $("startCamera").classList.remove("hidden");
 
-    $("startCamera").disabled = true;
+    $("startCamera").disabled = !$("consent").checked;
 
-    $("consent").checked = false;
-
-    $("myCode").textContent = "---";
-
-    status("دوربین خاموش شد.");
-
+    status("ارسال تصویر متوقف شد.");
 }
-
 
 $("stopCamera").onclick = stopSender;
 
 
-// ======================================
-// اتصال بیننده
-// ======================================
+/*
+========================================
+شروع پنل بیننده
+========================================
+*/
 
-$("connectViewer").onclick = () => {
+function startViewer() {
 
-    const remoteId = $("remoteCode").value.trim();
-
-    if (!remoteId) {
-
-        status("کد اتصال را وارد کنید.");
-
-        return;
-
+    if (peer) {
+        resetPeer();
     }
 
+    $("pendingBox").classList.add("hidden");
+    $("viewerActive").classList.add("hidden");
 
-    $("connectViewer").disabled = true;
+    $("viewerConnection").textContent =
+        "در حال اتصال به پنل مشاهده...";
 
-    status("در حال اتصال...");
-
-
-    peer = new Peer();
-
+    peer = new Peer(OWNER_PEER_ID);
 
     peer.on("open", () => {
 
-        // بیننده دوربین یا میکروفون خود را فعال نمی‌کند.
-        // MediaStream خالی برای درخواست دریافت تصویر استفاده می‌شود.
+        $("viewerConnection").textContent =
+            "پنل فعال است؛ منتظر درخواست دوربین...";
 
-        const call = peer.call(
-            remoteId,
-            new MediaStream()
-        );
+        status("آماده دریافت درخواست.");
 
-        if (!call) {
+    });
 
-            status("ساخت درخواست اتصال ناموفق بود.");
 
-            $("connectViewer").disabled = false;
+    /*
+    دریافت درخواست فرستنده
+    */
 
+    peer.on("call", call => {
+
+        if (incomingCall || activeCall) {
+            call.close();
             return;
-
         }
 
+        incomingCall = call;
 
-        activeCall = call;
+        $("pendingBox").classList.remove("hidden");
 
-        $("viewerActive").classList.remove("hidden");
+        $("viewerConnection").textContent =
+            "یک درخواست جدید دریافت شد.";
 
-        $("viewerStatus").textContent =
-            "در انتظار تأیید صاحب دوربین...";
-
-
-        call.on("stream", stream => {
-
-            $("remoteVideo").srcObject = stream;
-
-            $("viewerStatus").textContent =
-                "تصویر زنده برقرار است.";
-
-            $("connectViewer").classList.add("hidden");
-
-            $("remoteCode").disabled = true;
-
-            status("اتصال برقرار شد.");
-
-        });
-
-
-        call.on("close", () => {
-
-            $("remoteVideo").srcObject = null;
-
-            $("viewerStatus").textContent =
-                "اتصال قطع شد.";
-
-            $("connectViewer").classList.remove("hidden");
-
-            $("remoteCode").disabled = false;
-
-            activeCall = null;
-
-        });
-
-
-        call.on("error", () => {
-
-            status("خطا در دریافت تصویر.");
-
-            $("connectViewer").disabled = false;
-
-        });
+        status("درخواست جدید دوربین دریافت شد.");
 
     });
 
 
     peer.on("error", error => {
 
-        status("خطای اتصال: " + error.type);
+        $("viewerConnection").textContent =
+            "خطای اتصال: " + error.type;
 
-        $("connectViewer").disabled = false;
+        status("خطا در اتصال پنل.");
+
+    });
+
+}
+
+
+/*
+========================================
+تأیید درخواست
+========================================
+*/
+
+$("approveRequest").onclick = () => {
+
+    if (!incomingCall) return;
+
+    const call = incomingCall;
+
+    incomingCall = null;
+
+    activeCall = call;
+
+    // تأیید دریافت تصویر؛ بدون فعال‌کردن دوربین بیننده
+
+    call.answer();
+
+    $("pendingBox").classList.add("hidden");
+
+    $("viewerActive").classList.remove("hidden");
+
+    $("viewerStatus").textContent =
+        "در حال دریافت تصویر...";
+
+    call.on("stream", stream => {
+
+        $("remoteVideo").srcObject = stream;
+
+        $("viewerStatus").textContent =
+            "تصویر زنده برقرار است.";
+
+        status("تصویر با موفقیت دریافت شد.");
+
+    });
+
+    call.on("close", () => {
+
+        $("remoteVideo").srcObject = null;
+
+        $("viewerActive").classList.add("hidden");
+
+        $("viewerStatus").textContent =
+            "اتصال قطع شد.";
+
+        activeCall = null;
+
+        status("فرستنده اتصال را متوقف کرد.");
+
+    });
+
+    call.on("error", () => {
+
+        $("viewerStatus").textContent =
+            "خطا در دریافت تصویر.";
 
     });
 
 };
 
 
-// ======================================
-// قطع اتصال بیننده
-// ======================================
+/*
+========================================
+رد درخواست
+========================================
+*/
+
+$("rejectRequest").onclick = () => {
+
+    if (incomingCall) {
+        incomingCall.close();
+        incomingCall = null;
+    }
+
+    $("pendingBox").classList.add("hidden");
+
+    $("viewerConnection").textContent =
+        "درخواست رد شد.";
+
+    status("درخواست رد شد.");
+
+};
+
+
+/*
+========================================
+قطع اتصال بیننده
+========================================
+*/
 
 function stopViewer() {
 
@@ -453,23 +451,26 @@ function stopViewer() {
 
     $("viewerActive").classList.add("hidden");
 
-    $("connectViewer").classList.remove("hidden");
+    $("pendingBox").classList.add("hidden");
 
-    $("connectViewer").disabled = false;
-
-    $("remoteCode").disabled = false;
-
-    status("اتصال قطع شد.");
-
+    status("اتصال بیننده قطع شد.");
 }
 
+$("disconnectViewer").onclick = () => {
 
-$("disconnectViewer").onclick = stopViewer;
+    stopViewer();
+
+    // پنل بیننده دوباره آماده دریافت درخواست می‌شود.
+
+    startViewer();
+};
 
 
-// ======================================
-// خروج از صفحه
-// ======================================
+/*
+========================================
+خروج از صفحه
+========================================
+*/
 
 window.addEventListener("beforeunload", () => {
 
