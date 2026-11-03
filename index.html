@@ -1,16 +1,13 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-
     <meta name="theme-color" content="#07111f">
 
     <title>CamLink | اتصال دوربین</title>
 
     <link rel="stylesheet" href="style.css">
-
     <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 </head>
 
@@ -21,11 +18,10 @@
     <header>
         <div class="logo">C</div>
         <h2>CamLink</h2>
-        <span class="secure">اتصال امن</span>
+        <span class="secure">اشتراک‌گذاری با اجازه</span>
     </header>
 
     <section class="hero">
-
         <span class="tag">LIVE CAMERA CONNECTION</span>
 
         <h1>
@@ -33,151 +29,102 @@
             <span>با اجازه شما</span>
         </h1>
 
-        <p>
-            اتصال مستقیم دو دستگاه و مشاهده تصویر زنده دوربین
-        </p>
-
+        <p>اتصال مستقیم و مشاهده تصویر زنده دوربین</p>
     </section>
-
-
-    <!-- انتخاب حالت -->
 
     <section id="home" class="grid">
 
         <button class="card" id="showSender">
-
             <div class="icon">📷</div>
-
             <h3>ارسال تصویر</h3>
-
-            <p>
-                اشتراک‌گذاری دوربین این دستگاه
-            </p>
-
+            <p>اشتراک‌گذاری دوربین این دستگاه</p>
         </button>
 
-
         <button class="card" id="showViewer">
-
             <div class="icon">📱</div>
-
             <h3>مشاهده تصویر</h3>
-
-            <p>
-                مشاهده تصویر دستگاه دیگر
-            </p>
-
+            <p>پنل مدیریت درخواست‌ها و مشاهده تصویر</p>
         </button>
 
     </section>
 
-
-    <!-- پنل ارسال -->
+    <!-- پنل فرستنده -->
 
     <section id="senderPanel" class="panel hidden">
 
-        <button class="back" data-back>
-            ← بازگشت
-        </button>
+        <button class="back" data-back>← بازگشت</button>
 
         <h2>ارسال تصویر دوربین</h2>
 
         <div class="notice">
-
-            با فعال‌سازی این قسمت، دوربین دستگاه روشن
-            می‌شود و تصویر زنده برای بیننده ارسال خواهد شد.
-
-            مرورگر نیز جداگانه اجازه دسترسی به دوربین
-            را درخواست می‌کند.
-
+            با شروع ارسال، دوربین دستگاه شما روشن می‌شود.
+            درخواست مشاهده تصویر برای بیننده ارسال خواهد شد.
+            بیننده باید درخواست را تأیید کند.
             هر زمان بخواهید می‌توانید ارسال را متوقف کنید.
-
         </div>
 
-
         <label class="consent">
-
             <input type="checkbox" id="consent">
-
             با ارسال زنده تصویر دوربین موافقم.
-
         </label>
 
-
         <button id="startCamera" class="primary" disabled>
-
             تأیید و روشن‌کردن دوربین
-
         </button>
-
 
         <div id="senderActive" class="hidden">
 
             <div class="status" id="senderStatus">
-                در انتظار اتصال...
+                در انتظار اتصال به بیننده...
             </div>
 
-            <video id="localVideo"
-                   autoplay
-                   muted
-                   playsinline>
-            </video>
-
-            <p>کد اتصال شما:</p>
-
-            <div class="code-box">
-
-                <code id="myCode">---</code>
-
-                <button id="copyCode">
-                    کپی
-                </button>
-
+            <div class="waiting">
+                دوربین شما فعال است.
+                درخواست مشاهده در حال ارسال است.
             </div>
 
             <button id="stopCamera" class="danger">
-
                 توقف ارسال و خاموش‌کردن دوربین
-
             </button>
 
         </div>
 
     </section>
 
-
-    <!-- پنل مشاهده -->
+    <!-- پنل بیننده -->
 
     <section id="viewerPanel" class="panel hidden">
 
-        <button class="back" data-back>
-            ← بازگشت
-        </button>
+        <button class="back" data-back>← بازگشت</button>
 
-        <h2>مشاهده تصویر</h2>
+        <h2>پنل مشاهده تصویر</h2>
 
-        <p>
-            کد اتصال دستگاه فرستنده را وارد کنید.
-        </p>
+        <div id="viewerConnection" class="status">
+            در حال اتصال به پنل...
+        </div>
 
-        <input
-            id="remoteCode"
-            class="input"
-            placeholder="کد اتصال"
-            autocomplete="off"
-        >
+        <div id="pendingBox" class="request hidden">
 
-        <button id="connectViewer" class="primary">
+            <h3>📷 درخواست جدید</h3>
 
-            اتصال به دوربین
+            <p>
+                یک دستگاه درخواست ارسال تصویر دوربین دارد.
+            </p>
 
-        </button>
+            <button id="approveRequest" class="primary">
+                تأیید و مشاهده تصویر
+            </button>
 
+            <button id="rejectRequest" class="danger">
+                رد درخواست
+            </button>
+
+        </div>
 
         <div id="viewerActive" class="hidden">
 
             <div class="status" id="viewerStatus">
-                در انتظار تصویر...
+                تصویر زنده
             </div>
 
             <video
@@ -188,23 +135,19 @@
             </video>
 
             <button id="disconnectViewer" class="danger">
-
                 قطع اتصال
-
             </button>
 
         </div>
 
     </section>
 
-
     <div id="globalStatus" class="global-status">
         آماده اتصال
     </div>
 
-
     <footer>
-        CamLink · اتصال با رضایت کاربر
+        CamLink · ارتباط با رضایت کاربر
     </footer>
 
 </main>
